@@ -1,6 +1,13 @@
 #ifndef CLASSES_H_INCLUDED
 #define CLASSES_H_INCLUDED
 
+#include <iostream>
+#include <fstream>
+#include <math.h>
+#include <Core>
+#include <Dense>
+
+using namespace Eigen;
 using namespace std;
 
 // Class that contains cellular automata ruleset, numbered according to Wolfram system (base 2)
@@ -71,72 +78,124 @@ class permutation{
             cout << updates[0] << "," << updates[1] << "," << updates[2] << "," << updates[3] << endl;
         }
 
+        // Print the possible update permutations to a text file
+        void printUpdatesToFile( ofstream& aFile ){
+            aFile << updates[0] << "," << updates[1] << "," << updates[2] << "," << updates[3] << endl;
+        }
+
 };
 
 // Transmission matrix class
 class transmissionMatrix{
 
     public:
-        // Store values
-        float M[8][8]={};
+        // Default constructor sets matrix to zero
+        transmissionMatrix(){  N.setZero(); }
+
+        // Matrix of transmission probabilities
+        Matrix<float,8,8> N;
 
         // +1 to a entry of the matrix
-        void setValue( int x, int y ){ M[x][y] += 1; }
+        void setValue( int x, int y ){ N(x,y) += 1; }
 
         // Normalize the entries of the matrix (for four outputs per permutation)
-        void normalize(){
-            for ( int i = 0; i < 8; i++ ){
-                for (  int j = 0; j < 8; j++ ){
-                    M[i][j] /= 4;
-            }
-        }}
+        void normalize(){ N /= 4; }
 
         // Print the matrix
         void print(){
             cout << "Transmission matrix:" << endl;
             for ( int i = 0; i < 8; i++ ){
                 for (  int j = 0; j < 7; j++ ){
-                    cout << M[j][i] << ",";
+                    cout << N(j,i) << ",";
                 }
-                cout << M[7][i] << endl;
+                cout << N(7,i) << endl;
             }
             cout << endl;
+        }
+
+        // Print the matrix to a file
+        void printToFile( ofstream& aFile ){
+            aFile << "Transmission matrix:" << endl;
+            for ( int i = 0; i < 8; i++ ){
+                for (  int j = 0; j < 7; j++ ){
+                    aFile << N(j,i) << ",";
+                }
+                aFile << N(7,i) << endl;
+            }
+            aFile << endl;
         }
 
         // Return the result of multiplication of the this and an object matrix
         transmissionMatrix multiply( transmissionMatrix * object ){
             transmissionMatrix temp;
-            for( int i = 0; i < 8; i++ ){
-                for ( int j = 0; j < 8; j++ ){
-                    float sum = 0;
-                    for ( int k = 0; k < 8; k++ ){
-                        sum += M[k][i]*(object->M[j][k]);
-                    }
-                    temp.M[j][i] = sum;
-                }
-            }
+            temp.N = N;
+            temp.N *= object->N;
             return temp;
         }
 
-        float sumOfRow( int n ){
-            float sum = 0;
-            for ( int i = 0; i < 8; i++ ){ sum += M[i][n]; }
-            return sum;
+        // Return transmission matrix raised to power
+        transmissionMatrix toPower( int n ){
+            transmissionMatrix temp;
+            temp.N = N;
+            for ( int i = 0; i < n; i++ ){ temp.N *= N; }
+            return temp;
         }
 
-        float sumOfColumn( int n ){
-            float sum = 0;
-            for ( int i = 0; i < 8; i++ ){ sum += M[n][i]; }
-            return sum;
-        }
+        // Return sum of values of column
+        float sumOfColumn( int n ){ return N.row(n).sum(); }
 
         // Print degree (P-in - P-out) of each permutation
         void printDegrees(){
-            for (  int i = 0; i < 8; i++ ){
-                cout << sumOfColumn(i)-sumOfRow(i) << ",";
-            }
+            for (  int i = 0; i < 8; i++ ){ cout << sumOfColumn(i)-1 << ","; }
             cout << endl << endl;
         }
+
+        // Return number of 1's on diagonal
+        int onesOnDiagonal(){
+            int numOnes = 0;
+            for ( int i = 0; i < 8; i++ ){
+                    if ( N(i,i) == 1 ){ numOnes++; }
+            }
+            return numOnes;
+        }
+
+        // Return number of ones off the diagonal
+        int onesOffDiagonal(){
+            int numOnes = 0;
+            for ( int i = 0; i < 8; i++ ){
+                for ( int j = 0; j < 8; j++ ){
+                    if ( i != j && N(i,j) == 1 ){ numOnes++; }
+               }
+            }
+            return numOnes;
+        }
+
+        // Checks of the matrix contains any zeros
+        bool noZeros(){
+            if ( (N.array() > 0).all() ){ return true; }
+            return false;
+        }
+
+        // Compare if column elements match
+        bool matchColumn( int n ){
+            if ( ( abs(N.row(n).array() - N(n,0)) < 0.01 ).all() ){ return true; }
+            return false;
+        }
+
+        // Check if all column matches
+        bool columnsMatch(){
+            for ( int i = 0; i < 8; i++ ){
+                if ( !matchColumn(i) ){  return false; }
+            }
+            return true;
+        }
+
+        // Compare if all cells match
+        bool cellsMatch(){
+            if ( ( abs(N.array() - N(0,0)) < 0.01 ).all() ){ return true; }
+            return false;
+        }
+
 };
 
 #endif // CLASSES_H_INCLUDED
