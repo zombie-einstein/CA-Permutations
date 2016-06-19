@@ -6,6 +6,9 @@
 #include <math.h>
 #include <Core>
 #include <Dense>
+#include <Eigenvalues>
+#include <vector>
+#include <set>
 
 using namespace Eigen;
 using namespace std;
@@ -94,6 +97,9 @@ class transmissionMatrix{
 
         // Matrix of transmission probabilities
         Matrix<float,8,8> N;
+
+        // Vector to contain communicating class
+        vector<int> commClasses;
 
         // +1 to a entry of the matrix
         void setValue( int x, int y ){ N(x,y) += 1; }
@@ -195,6 +201,59 @@ class transmissionMatrix{
             if ( ( abs(N.array() - N(0,0)) < 0.01 ).all() ){ return true; }
             return false;
         }
+
+        // Print the eigenvalues of this matrix
+        void printEigenValues( ofstream& aFile ){
+            EigenSolver<Matrix<float,8,8>> solver;
+            solver.compute(N,false);
+            aFile << "Eigenvalues: " << solver.eigenvalues().transpose() << endl << endl;
+        }
+
+        // Find the communicating classes of this transmission matrix
+        void findCommClasses( ofstream& aFile ){
+
+            vector< vector<int> > accessLists;  // Stores vectors of access lists from each state
+
+            for ( int i = 0; i < 8; ++i ){
+                vector<int> temp;   // Temp access list for this state
+                // Get states accessible on first step
+                for( int j = 0; j < 8; ++j ){ if ( N(j,i) > 0 ){ temp.push_back( j ); } }
+
+
+                int accessLength;   // Save the length of this vector for comparison
+
+                do{
+                    accessLength = temp.size();   // update current length of temp
+                    // Loop over accessible states and push their accessible states to temp
+                    for( int j = 0; j < accessLength; ++j ){
+                        for( int k = 0; k < 8; ++k ){
+                            if ( N(k,temp[j]) > 0 ){ temp.push_back( k ); }
+                        }
+                    }
+                    // Sort and remove any duplicates
+                    sort( temp.begin(), temp.end() );
+                    temp.erase( unique( temp.begin(), temp.end() ), temp.end() );
+                }
+                // Continue if the length of temp has changed (i.e new access members have been added)
+                while( temp.size() != accessLength );
+                // Add this states access list to
+                accessLists.push_back( temp );
+            }
+
+            aFile << "State accesibility:" << endl;
+
+            for ( int i = 0; i < 8; ++i ){
+                aFile << i << "--> ";
+                vector<int>::iterator it;
+                for ( it = accessLists[i].begin(); it != accessLists[i].end()-1; ++it ){
+                    aFile << *it << ",";
+                }
+                it = accessLists[i].end()-1;
+                aFile << *it << endl;
+            }
+            aFile << endl;
+        }
+
 
 };
 
