@@ -1,11 +1,11 @@
 # depslib dependency file v1.0
-1466352141 source:/home/jordan/Projects/ca_graph/main.cpp
+1466432701 source:/home/jordan/Projects/ca_graph/main.cpp
 	"classes.h"
 	<sstream>
 	<string.h>
 	<vector>
 
-1466354018 /home/jordan/Projects/ca_graph/classes.h
+1466559227 /home/jordan/Projects/ca_graph/classes.h
 	<iostream>
 	<fstream>
 	<math.h>
@@ -13,7 +13,7 @@
 	<Dense>
 	<Eigenvalues>
 	<vector>
-	<set>
+	<list>
 
 1466001715 /home/jordan/Projects/ca_graph/Eigen/src/Core
 

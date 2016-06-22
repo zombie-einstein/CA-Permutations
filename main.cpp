@@ -109,7 +109,10 @@ int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
         testMatrix.printToFile( aFile );
         //testMatrix.printEigenValues( aFile );
 
-        testMatrix.findCommClasses( aFile );
+        testMatrix.printCommClasses( aFile );
+        aFile << endl;
+
+        testMatrix.printPaths( aFile );
 
         transmissionMatrix powers = testMatrix.toPower( reps );
 

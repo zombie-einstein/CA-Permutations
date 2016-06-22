@@ -8,7 +8,7 @@
 #include <Dense>
 #include <Eigenvalues>
 #include <vector>
-#include <set>
+#include <list>
 
 using namespace Eigen;
 using namespace std;
@@ -210,7 +210,7 @@ class transmissionMatrix{
         }
 
         // Find the communicating classes of this transmission matrix
-        void findCommClasses( ofstream& aFile ){
+        void printCommClasses( ofstream& aFile ){
 
             vector< vector<int> > accessLists;  // Stores vectors of access lists from each state
 
@@ -254,7 +254,84 @@ class transmissionMatrix{
             aFile << endl;
         }
 
+        // Print the paths of this markov chain
+        void printPaths( ofstream& aFile ){
 
+            // Node class required for path search
+            class node{
+                public:
+                    int value;
+                    vector<node*> children;
+                    bool visited = false;
+                    bool localVisit[8] = {false,false,false,false,false,false,false,false};
+                    void addChild( node* child ){ children.push_back( child ); }
+                    void clearVisits(){ for( int i = 0; i < 8; ++i ){ localVisit[i] = false; } }
+                    void printNode( ofstream& aFile ){
+                        aFile << value << ":";
+                        for ( vector<node*>::iterator it = children.begin(); it != children.end(); ++it ){
+                            aFile << (*it)->value << ",";
+                        }
+                        aFile << endl;
+
+                    }
+
+            };
+
+            // States as nodes
+            node nodeList[8];
+
+            // Populate nodes from
+            for ( int i = 0; i < 8; ++i ){
+                nodeList[i].value = i;
+                for ( int j = 0; j < 8; ++j ){
+                    if ( N(j,i) > 0 ){
+                            nodeList[i].addChild( nodeList+j ); }
+                }
+            }
+
+            // Store the paths
+            list< vector<node*> > paths;
+            // Push first node to vector
+            nodeList[0].visited = true;
+            vector<node*> temp = { nodeList };
+            paths.push_back( temp );
+            // Iterator to current place on list
+            list< vector <node*> >::iterator listIt = paths.begin();
+            vector<node*>::iterator nodeIt;
+
+            int stackSize;
+
+            do{
+                stackSize = listIt->size();
+                for ( nodeIt = (listIt->back())->children.begin(); nodeIt !=  (listIt->back())->children.end(); ++ nodeIt ){
+                    if ( !((*nodeIt)->visited) && !((listIt->back())->localVisit[(*nodeIt)->value]) ){
+                        (*nodeIt)->visited = true;
+                        (listIt->back())->localVisit[(*nodeIt)->value] = true;
+                        listIt->push_back( *nodeIt );
+                        break;
+                    }
+                    if ( (*nodeIt)->visited && !((listIt->back())->localVisit[(*nodeIt)->value]) ){
+                        (listIt->back())->localVisit[(*nodeIt)->value] = true;
+                        paths.insert( listIt, *listIt );
+                        continue;
+                    }
+                }
+            }
+            while( listIt->size() != stackSize );
+
+            for ( int i = 0; i < 8; ++i ){ nodeList[i].printNode(aFile); }
+            aFile << endl;
+
+            for ( listIt = paths.begin(); listIt != paths.end(); ++listIt ){
+                for ( nodeIt = listIt->begin(); nodeIt != listIt->end(); ++nodeIt ){
+                    aFile << (*nodeIt)->value << ",";
+                }
+                aFile << endl;
+            }
+            aFile << endl;
+
+
+        }
 };
 
 #endif // CLASSES_H_INCLUDED
