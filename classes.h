@@ -302,26 +302,42 @@ class transmissionMatrix{
             int stackSize;
 
             do{
-                stackSize = listIt->size();
+                stackSize = listIt->size(); // Store current stack size to compare against
+
+                // Iterate over current states children
                 for ( nodeIt = (listIt->back())->children.begin(); nodeIt !=  (listIt->back())->children.end(); ++ nodeIt ){
+
+                    // Check if this state has been visited on the tree or by this state
                     if ( !((*nodeIt)->visited) && !((listIt->back())->localVisit[(*nodeIt)->value]) ){
-                        (*nodeIt)->visited = true;
-                        (listIt->back())->localVisit[(*nodeIt)->value] = true;
-                        listIt->push_back( *nodeIt );
-                        break;
+                        (*nodeIt)->visited = true;                              // Mark child as visited globally
+                        (listIt->back())->localVisit[(*nodeIt)->value] = true;  // Mark child as visited by this state
+                        listIt->push_back( *nodeIt );                           // Push Child to stack
+                        break;                                                  // Leave loop to go back to current end of stack
                     }
+                    // Check if the state is globally visited (i.e. a repetition) but not from this state
                     if ( (*nodeIt)->visited && !((listIt->back())->localVisit[(*nodeIt)->value]) ){
-                        (listIt->back())->localVisit[(*nodeIt)->value] = true;
-                        paths.insert( listIt, *listIt );
-                        continue;
+                        (listIt->back())->localVisit[(*nodeIt)->value] = true;  // Mark child as visited locally
+                        paths.insert( listIt, *listIt );                        // Duplicate the current stack (i.e. save the cycle)
+                        (--listIt)->push_back( *nodeIt );                       // Push the child to the previous stack (to display loop value)
+                        ++listIt;                                               // Reset iterator to current position
+                    }
+                    // Is this is the last child to be checked
+                    if ( next(nodeIt) == (listIt->back())->children.end() ){
+                        (listIt->back())->visited = false;                      // Mark the current node as unvisited
+                        (listIt->back())->clearVisits();                        // Mark all it's children as unvisited
+                        listIt->pop_back();                                     // Remove the current node from the stack
+                        break;                                                  // Break out of the loop to avoid using iterator nodeIt again
                     }
                 }
             }
-            while( listIt->size() != stackSize );
+            while( listIt->size() != stackSize && listIt->size() > 0 );         // Terminate if the current stack size is unchanged, but also avoid completely deleting it
 
+            // Print the node relationship list
+            aFile << "Nodes:" << endl;
             for ( int i = 0; i < 8; ++i ){ nodeList[i].printNode(aFile); }
             aFile << endl;
-
+            // Print the cycles
+            aFile << "Cycles from 0: "<< endl;
             for ( listIt = paths.begin(); listIt != paths.end(); ++listIt ){
                 for ( nodeIt = listIt->begin(); nodeIt != listIt->end(); ++nodeIt ){
                     aFile << (*nodeIt)->value << ",";
