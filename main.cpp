@@ -1,8 +1,8 @@
-//#include <iostream>
+#include <iostream>
+
+#include "transmatrix.h"
 #include "classes.h"    // All the classes are defined here
-#include <sstream>
-#include <string.h>
-#include <vector>
+
 using namespace std;
 
 void printClass(){
@@ -20,7 +20,7 @@ void printClass(){
             permList[i].setUpdates( &ruleA );
         }
 
-        transmissionMatrix testMatrix;
+        transMatrix testMatrix;
 
         for ( int i = 0; i < 8; i++ ){
             for ( int j = 0; j < 4; j++ ){
@@ -48,7 +48,7 @@ void printMatrix( int r ){
             permList[i].printUpdates();
         }
 
-        transmissionMatrix testMatrix;
+        transMatrix testMatrix;
 
         for ( int i = 0; i < 8; i++ ){
             for ( int j = 0; j < 4; j++ ){
@@ -62,7 +62,7 @@ void printMatrix( int r ){
 
         testMatrix.printDegrees();
 
-        transmissionMatrix powers[reps];
+        transMatrix powers[reps];
 
         powers[0] = testMatrix.multiply(&testMatrix);
 
@@ -95,7 +95,7 @@ int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
             permList[i].printUpdatesToFile( aFile );
         }
 
-        transmissionMatrix testMatrix;
+        transMatrix testMatrix;
 
         for ( int i = 0; i < 8; i++ ){
             for ( int j = 0; j < 4; j++ ){
@@ -114,7 +114,7 @@ int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
 
         testMatrix.printPaths( aFile );
 
-        transmissionMatrix powers = testMatrix.toPower( reps );
+        transMatrix powers = testMatrix.toPower( reps );
 
         powers.printToFile( aFile );
 
@@ -128,8 +128,8 @@ int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
 
 }
 
-int main()
-{
+int main(){
+
     ofstream statFile;
     statFile.open( "data/stats.txt" );
     statFile << boolalpha;

@@ -89,11 +89,11 @@ class permutation{
 };
 
 // Transmission matrix class
-class transmissionMatrix{
+class transMatrix{
 
     public:
         // Default constructor sets matrix to zero
-        transmissionMatrix(){  N.setZero(); }
+        transMatrix(){  N.setZero(); }
 
         // Matrix of transmission probabilities
         Matrix<float,8,8> N;
@@ -132,16 +132,16 @@ class transmissionMatrix{
         }
 
         // Return the result of multiplication of the this and an object matrix
-        transmissionMatrix multiply( transmissionMatrix * object ){
-            transmissionMatrix temp;
+        transMatrix multiply( transMatrix * object ){
+            transMatrix temp;
             temp.N = N;
             temp.N *= object->N;
             return temp;
         }
 
         // Return transmission matrix raised to power
-        transmissionMatrix toPower( int n ){
-            transmissionMatrix temp;
+        transMatrix toPower( int n ){
+            transMatrix temp;
             temp.N = N;
             for ( int i = 0; i < n; i++ ){ temp.N *= N; }
             return temp;
@@ -267,14 +267,12 @@ class transmissionMatrix{
                     void addChild( node* child ){ children.push_back( child ); }
                     void clearVisits(){ for( int i = 0; i < 8; ++i ){ localVisit[i] = false; } }
                     void printNode( ofstream& aFile ){
-                        aFile << value << ":";
+                        aFile << value << "-> ";
                         for ( vector<node*>::iterator it = children.begin(); it != children.end(); ++it ){
                             aFile << (*it)->value << ",";
                         }
                         aFile << endl;
-
                     }
-
             };
 
             // States as nodes
@@ -340,7 +338,8 @@ class transmissionMatrix{
             aFile << "Cycles from 0: "<< endl;
             for ( listIt = paths.begin(); listIt != paths.end(); ++listIt ){
                 for ( nodeIt = listIt->begin(); nodeIt != listIt->end(); ++nodeIt ){
-                    aFile << (*nodeIt)->value << ",";
+                    if ( next(nodeIt) == listIt->end() ){ aFile << (*nodeIt)->value; }
+                    else{ aFile << (*nodeIt)->value << "->"; }
                 }
                 aFile << endl;
             }
