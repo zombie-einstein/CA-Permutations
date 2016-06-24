@@ -24,7 +24,7 @@ void printClass(){
 
         for ( int i = 0; i < 8; i++ ){
             for ( int j = 0; j < 4; j++ ){
-                testMatrix.setValue( permList[i].updates[j], i );
+                testMatrix( permList[i].updates[j], i ) += 1;
             }
         }
 
@@ -52,34 +52,32 @@ void printMatrix( int r ){
 
         for ( int i = 0; i < 8; i++ ){
             for ( int j = 0; j < 4; j++ ){
-                testMatrix.setValue( permList[i].updates[j], i );
+                testMatrix(permList[i].updates[j],i) += 1;
             }
         }
         cout << endl;
 
         testMatrix.normalize();
-        testMatrix.print();
+        testMatrix.printMatToConsole();
 
         testMatrix.printDegrees();
 
         transMatrix powers[reps];
 
-        powers[0] = testMatrix.multiply(&testMatrix);
+        powers[0] = testMatrix * testMatrix;
 
         for ( int i = 1; i < reps; i++ ){
-            powers[i] = powers[i-1].multiply(&testMatrix);
+            powers[i] = powers[i-1] * testMatrix;
         }
 
-        //for ( int i = 0; i < reps; i++ ){  powers[i].print(); }
-
-        powers[reps-1].print();
+        powers[reps-1].printMatToConsole();
         powers[reps-1].printDegrees();
 
 }
 
 int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
 
-        unsigned reps = 50;
+        int reps = 50;
 
         aFile << "Rule: " << r << endl << endl;
 
@@ -99,14 +97,14 @@ int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
 
         for ( int i = 0; i < 8; i++ ){
             for ( int j = 0; j < 4; j++ ){
-                testMatrix.setValue( permList[i].updates[j], i );
+                testMatrix( permList[i].updates[j], i ) += 1;
             }
         }
 
         aFile << endl;
 
         testMatrix.normalize();
-        testMatrix.printToFile( aFile );
+        testMatrix.printMatToFile( aFile );
         //testMatrix.printEigenValues( aFile );
 
         testMatrix.printCommClasses( aFile );
@@ -114,9 +112,9 @@ int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
 
         testMatrix.printPaths( aFile );
 
-        transMatrix powers = testMatrix.toPower( reps );
+        transMatrix powers = testMatrix^reps;
 
-        powers.printToFile( aFile );
+        //powers.printMatToFile( aFile );
 
         bFile << r << ":\t" << testMatrix.onesOnDiagonal() << "\t" << testMatrix.onesOffDiagonal() << "\t" << powers.noZeros() << "\t" << powers.columnsMatch() << "\t" << powers.cellsMatch() << "\t" << powers.onesOnDiagonal()+powers.onesOffDiagonal();
 
