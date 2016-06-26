@@ -723,13 +723,12 @@
 	<mkl.h>
 	<mkl_lapacke.h>
 
-1466964404 /home/jordan/Projects/ca_graph/node.h
+1466975940 /home/jordan/Projects/ca_graph/node.h
 	<iostream>
 	<fstream>
 	<vector>
 	<list>
-	<array>
 
-1466957843 source:/home/jordan/Projects/ca_graph/node.cpp
+1466966419 source:/home/jordan/Projects/ca_graph/node.cpp
 	"node.h"
 

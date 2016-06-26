@@ -14,6 +14,12 @@ void nodeChild::mark(){ check = true; }
 // Un-mark child as visited
 void nodeChild::unmark(){ check = false; }
 
+// Mark this child as visited (globally)
+void nodeChild::markVisited(){
+
+    pntr->visited = true;
+}
+
 /* ===== NODE FUNCTION DEFINTIONS ===== */
 // Default constructor
 node::node(){}
@@ -36,7 +42,7 @@ void node::unmarkChildren(){
 // Print the node and it's children to file
 void node::printNodeToFile( ofstream& aFile ){
 
-    aFile << value << "-> ";
+    aFile << value << " -> ";
 
     for ( list<nodeChild>::iterator chIt = children.begin(); chIt != children.end(); ++chIt ){
         aFile << chIt->pntr->value << ",";
@@ -44,127 +50,165 @@ void node::printNodeToFile( ofstream& aFile ){
     aFile << endl;
 }
 
-/* ===== FUNCTION DEFINITIONS ===== */
+/* ===== CYCLE LIST METHODS ===== */
+// Add a node to the node list as node child
+void cycleList::addNode( node* newNode ){
 
-int printPathsToFile( node nodeList[], int listSize, ofstream& aFile ){
+    nodeList.push_back( nodeChild( newNode ) );
+}
 
-    // Store the paths
-    list< list<node*> > paths;
+// Add cycles from specific node to cycle list
+void cycleList::cyclesFromNode( childIt start ){
 
-    list< list<node*> >::iterator listIt;
-    list<node*>::iterator nodeIt;
-    list<nodeChild>::iterator chldIt;
+    // Mark start node as visited locally and on list
+    start->mark();
+    start->markVisited();
 
-    for ( int i = 0; i < listSize; ++i ){
+    // Push start node to new stack then to list
+    list<node*> temp(1, start->pntr );
+    stackList.push_back( temp );
 
-        // Push first node to the current stack
-        nodeList[i].visited = true;
-        list<node*> temp( 1, &nodeList[i] );
-        paths.push_back( temp );
+    // Iterator to current stack and list positions
+    listIt currentStackIt = --stackList.end();
 
-        // Iterator to current place on lists an stack
-        listIt = paths.end();
-        --listIt;
+    int stackSize;      // Store the current size of the stack to later compare against
+    node* currentNode;  // Pointer to final node on stack
 
+    do{
+        stackSize   = currentStackIt->size();
+        currentNode = currentStackIt->back();
 
-        int stackSize;      // Store stack size at start of iteration
-        node* currentNode;  // Pointer to the current node being checked
+        // Iterate over the current nodes children
+        for ( childIt it = currentNode->children.begin(); it != currentNode->children.end(); ++it ){
 
-        do{
-            stackSize   = listIt->size();     // Store current stack size to compare against
-            currentNode = listIt->back();   // Point to the last node on the current stack
+                // If the child node has not been visited on this path, or previously from this node
+                // then mark it visited and push it to the stack, then move on to stack
+                if ( !it->pntr->visited && !it->check ){
 
-            // Iterate over current nodes children
-            for ( chldIt = currentNode->children.begin(); chldIt !=  currentNode->children.end(); ++chldIt ){
-
-                // Check if this state has been visited on the tree or by this state
-                if ( !(chldIt->pntr->visited) && !(chldIt->check) ){
-                    chldIt->pntr->visited = true;                           // Mark child as visited globally
-                    chldIt->mark();                                         // Mark child as visited by this state
-                    listIt->push_back( chldIt->pntr );                      // Push Child to stack
-                    break;                                                  // Leave loop to go back to current end of stack
+                    it->markVisited();
+                    it->mark();
+                    currentStackIt->push_back( it->pntr );
+                    break;
                 }
-                // Check if the state is globally visited (i.e. a repetition) but not from this state
-                if ( chldIt->pntr->visited && !(chldIt->check) ){
-                    chldIt->mark();                                         // Mark child as visited locally
-                    paths.insert( listIt, *listIt );                        // Duplicate the current stack (i.e. save the cycle)
-                    (--listIt)->push_back( chldIt->pntr );                  // Push the child to the previous stack (to display the repeated node value)
-                    ++listIt;                                               // Reset iterator to current position
+
+                // If the child node has been previously visited, but not from this state, it forms a cycle
+                // so copy it and start on a new stack
+                if ( it->pntr->visited && !it->check ){
+
+                    it->mark();
+                    stackList.insert( currentStackIt, *currentStackIt );
+                    (--currentStackIt)->push_back( it->pntr );
+                    ++currentStackIt;
                 }
-                // Is this is the last child to be checked
-                if ( next(chldIt) == currentNode->children.end() ){
-                    currentNode->visited = false;                           // Mark the current node as unvisited
-                    currentNode->unmarkChildren();                          // Mark all it's children as unvisited
-                    listIt->pop_back();                                     // Remove the current node from the stack
-                    break;                                                  // Break out of the loop to avoid using iterator nodeIt again
+
+                // If this is the last child on the list, then remove the node from the list
+                // and mark it as unvisited and it's children as unvisited from this node
+                if ( next(it) == currentNode->children.end() ){
+
+                    currentNode->visited = false;
+                    currentNode->unmarkChildren();
+                    currentStackIt->pop_back();
+                    break;
                 }
-            }
         }
-        while( listIt->size() != stackSize && listIt->size() > 0 );         // Terminate if the current stack size is unchanged, but also avoid completely deleting it
-
-        nodeList[i].visited = false;
-        paths.pop_back();
     }
+    while( currentStackIt->size() != stackSize && currentStackIt->size() > 0 );
 
-    // Clean up paths that have excess nodes at start
-    for ( listIt = paths.begin(); listIt != paths.end(); ++listIt ){
+}
 
-        if ( listIt->begin() == listIt->end() ){ continue; }
+// Remove any nodes not inside cycle from the front of a path
+void cycleList::cleanCycles(){
 
-        list<node*>::iterator penIt = listIt->end();
-        --penIt;
-        for ( nodeIt = listIt->begin(); nodeIt != penIt; ++nodeIt ){
-            if ( *nodeIt == listIt->back()  ){
-                listIt->erase( listIt->begin(), nodeIt );
+    // Loop over the list of stacks
+    for ( listIt it = stackList.begin(); it!= stackList.end(); ++it ){
+
+        if ( it->begin() == it->end() ){ continue; } // If the start and end nodes match then continue
+
+        stckIt penIt = --(it->end());   // Iterator pointing to penultimate node
+
+        // Check nodes before penultimate for a match
+        for ( stckIt jt = it->begin(); jt != penIt; ++jt ){
+
+            if ( *jt == it->back() ){
+
+                it->erase( it->begin(), jt );  // Delete nodes before the match
                 break;
             }
         }
     }
+}
 
-    // Rotate cycle until lowest value first (for comparison)
-    list<node*>::iterator minIt;
-    for ( listIt = paths.begin(); listIt != paths.end(); ++listIt ){
-        minIt = listIt->begin();
-        for ( nodeIt = listIt->begin(); nodeIt != listIt->end(); ++nodeIt ){
-            if ( (*nodeIt)->value < (*minIt)->value ){ minIt = nodeIt; }
-        }
-        if ( minIt == listIt->begin() ){ continue; }
+// Re-order the cycles so that the lowest node value appears first
+void cycleList::re_orderCycles(){
 
-        listIt->pop_back();
-        for ( nodeIt = listIt->begin(); nodeIt != minIt; ++nodeIt ){
-            listIt->splice( listIt->end(), *listIt, nodeIt );
+    stckIt minIt;   // Iterator pointing to minimum node
+
+    // Loop over the cycle list
+    for ( listIt it = stackList.begin(); it != stackList.end(); ++it ){
+
+        minIt = it->begin();    // First place min at start of cycle
+
+        for ( stckIt jt = it->begin(); jt != it->end(); ++jt ){
+            if ( (*jt)->value < (*minIt)->value ) minIt = jt;
         }
-        listIt->push_back( *(listIt->begin()) );
+
+        if ( minIt == it->begin() ) continue;
+
+        it->pop_back();
+
+        for ( stckIt jt = it->begin(); jt != minIt; ++jt ){
+            it->splice( it->end(), *it, jt );
+        }
+
+        it->push_back( *(it->begin()) );
     }
+}
 
-    // Remove and repeated cycles from the list
-    paths.sort();
-    paths.unique();
+// Remove any repeated cycles from the list
+void cycleList::removeRepeated(){
 
-    // Print the node relationship list
-    aFile << "Nodes:" << endl;
-    for ( int i = 0; i < listSize; ++i ){ nodeList[i].printNodeToFile(aFile); }
-    aFile << endl;
+    stackList.sort();
+    stackList.unique();
+}
 
-    // Print the cycles and their state representation
-    aFile << "Cycles: "<< endl;
-    for ( listIt = paths.begin(); listIt != paths.end(); ++listIt ){
-        for ( nodeIt = listIt->begin(); nodeIt != listIt->end(); ++nodeIt ){
-            if ( next(nodeIt) == listIt->end() ){ aFile << (*nodeIt)->value; }
-            else{ aFile << (*nodeIt)->value << "->"; }
+// Print the cycles to a file
+void cycleList::printCyclesToFile( ofstream& aFile ){
+
+    for ( listIt it = stackList.begin(); it != stackList.end(); ++it ){
+        for ( stckIt jt = it->begin(); jt != it->end(); ++jt ){
+            if ( next(jt) == it->end() ) aFile << (*jt)->value;
+            else{ aFile << (*jt)->value << "->"; }
         }
         aFile << endl;
-
-        list<node*>::reverse_iterator disIt;
-        for ( disIt = listIt->rbegin(); disIt != listIt->rend(); ++disIt ){
-            for ( int i = 2; i > -1; --i ){
-                if ( ( (*disIt)->value >> i ) % 2 == 0 ){ aFile << "\u2591"; }
-                else{ aFile << "\u2588"; }
-            }
-            aFile << endl;
-        }
     }
-    aFile << endl << "Number of cycles: " << paths.size() << endl;
+}
 
-    return paths.size();
+/* ===== FUNCTION DEFINITIONS ===== */
+int printPathsToFile( node nodeList[], int listSize, ofstream& aFile ){
+
+    cycleList newGraph;
+
+    for ( int i = 0; i < listSize; ++i ){
+
+        newGraph.addNode( nodeList+i );
+    }
+
+    aFile << "Node Children:" << endl;
+
+    for ( list<nodeChild>::iterator it = newGraph.nodeList.begin(); it != newGraph.nodeList.end(); ++it ){
+
+        it->pntr->printNodeToFile( aFile );
+        newGraph.cyclesFromNode( it );
+
+    }
+
+    newGraph.cleanCycles();
+    newGraph.re_orderCycles();
+    newGraph.removeRepeated();
+
+    aFile << endl << "Closed Cycles:" << endl;
+
+    newGraph.printCyclesToFile( aFile );
+
+    return newGraph.stackList.size();
 }
