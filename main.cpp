@@ -1,7 +1,9 @@
-#include <iostream>
 
-#include "transmatrix.h"
-#include "classes.h"    // All the classes are defined here
+#include <iostream>
+#include <algorithm>
+
+#include "transmatrix.h"    // Transmission matrix class
+#include "classes.h"        // Ruleset and permutation class
 
 using namespace std;
 
@@ -33,49 +35,7 @@ void printClass(){
     }
 }
 
-void printMatrix( int r ){
-
-        unsigned reps = 50;
-
-        permutation permList[8];
-
-        ruleset test(r);
-
-        for ( int i = 0; i < 8; i++ ){
-            permList[i].setValue(i);
-            permList[i].setUpdates( &test );
-            //permList[i].printNeighbours();
-            permList[i].printUpdates();
-        }
-
-        transMatrix testMatrix;
-
-        for ( int i = 0; i < 8; i++ ){
-            for ( int j = 0; j < 4; j++ ){
-                testMatrix(permList[i].updates[j],i) += 1;
-            }
-        }
-        cout << endl;
-
-        testMatrix.normalize();
-        testMatrix.printMatToConsole();
-
-        testMatrix.printDegrees();
-
-        transMatrix powers[reps];
-
-        powers[0] = testMatrix * testMatrix;
-
-        for ( int i = 1; i < reps; i++ ){
-            powers[i] = powers[i-1] * testMatrix;
-        }
-
-        powers[reps-1].printMatToConsole();
-        powers[reps-1].printDegrees();
-
-}
-
-int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
+int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile, vector<int>& cycleCount ){
 
         int reps = 50;
 
@@ -105,12 +65,11 @@ int printMatrixToFile( int r, ofstream& aFile, ofstream& bFile ){
 
         testMatrix.normalize();
         testMatrix.printMatToFile( aFile );
-        //testMatrix.printEigenValues( aFile );
 
         testMatrix.printCommClasses( aFile );
         aFile << endl;
 
-        testMatrix.printPaths( aFile );
+        cycleCount.push_back( testMatrix.printPaths( aFile ) );
 
         transMatrix powers = testMatrix^reps;
 
@@ -135,19 +94,36 @@ int main(){
 
     vector<int> classes[4];
 
+    vector<int> cycleCount;
+
     for ( int i = 0; i< 256; i++ ){
         ofstream file;
         file.open ( "data/CA_Matrices"+to_string(i)+".txt" );
-        classes[printMatrixToFile( i, file, statFile )].push_back(i);
+        classes[printMatrixToFile( i, file, statFile, cycleCount )].push_back(i);
         file.close();
     }
+
+
+    vector<int>::const_iterator maxIt = max_element( cycleCount.begin(), cycleCount.end() );
+
+    int histogram[*maxIt];
+
+    for ( int i = 0; i < *maxIt; ++i ){ histogram[i] = 0; }
+
+    for ( vector<int>::iterator it = cycleCount.begin(); it != cycleCount.end(); ++it ){
+        ++histogram[*it-1];
+    }
+
+    statFile << endl;
+
+    for ( int i = 0; i < *maxIt; ++i ){ statFile << histogram[i] << ", "; }
 
     statFile.close();
 
     ofstream classFile;
     classFile.open( "data/classes.txt" );
     classFile << "******* CA Classifications *******" << endl;
-    classFile << "Class 1: " << classes[0].size();
+    classFile << "Class 1: "  << classes[0].size();
     classFile << " Class 2: " << classes[1].size();
     classFile << " Class 3: " << classes[2].size();
     classFile << " Class 4: " << classes[3].size() << endl;
