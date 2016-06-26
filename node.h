@@ -6,7 +6,6 @@
 #include <fstream>
 
 // STD Containers
-#include <vector>
 #include <list>
 
 // Name-spaces
@@ -27,13 +26,14 @@ class nodeChild{
         nodeChild( node* child );
 
         /* VARIABLES */
-        node* pntr;         // Pointer to child node
-        bool check;         // Node visit check
+        node* pntr;             // Pointer to child node
+        bool check;             // Node visit check
 
         /* METHODS */
-        void mark();        // Mark this child as visited
-        void unmark();      // Un-mark this child as visited
-        void markVisited(); // Mark this child as globally visited
+        void mark();            // Mark this child as visited
+        void unmark();          // Un-mark this child as visited
+        void markVisited();     // Mark this child as globally visited
+        void unMarkVisited();   // UnMark this child as globally visited
 };
 
 /* ===== GRAPH NODE CLASS ===== */
@@ -82,7 +82,7 @@ class cycleList{
         /* TYPEDEFS */
         typedef list< list<node*> >::iterator listIt;  // Iterator over list
         typedef list<node*>::iterator stckIt;          // Iterator over stack
-        typedef list<nodeChild>::iterator childIt;      // Iterator over children
+        typedef list<nodeChild>::iterator childIt;     // Iterator over children
 
         /* CONTAINERS */
         // List of nodes to be considered

@@ -1,41 +1,65 @@
-#ifndef CLASSES_H_INCLUDED
-#define CLASSES_H_INCLUDED
+#ifndef RULESET_H_INCLUDED
+#define RULESET_H_INCLUDED
 
+/* IO LIBRARIES */
 #include <iostream>
 #include <fstream>
+#include <math.h>
+
+/* STD CONTAINERS */
 #include <vector>
 
-using namespace Eigen;
+/* NAMESPACES */
 using namespace std;
 
-// Class that contains cellular automata ruleset, numbered according to Wolfram system (base 2)
+/* ===== RULESET CLASS ===== */
+// Class that contains a cellular automata ruleset
+// for a given number of states and range according
+// to Wolfram system
+
 class ruleset{
 
     public:
 
-        unsigned int value, n[8];
+        /* VARIABLES */
+        // rule-number: n, range: r and number of states: s
+        int n, r, s;
+        vector<int> P;
 
+        /* CONSTRUCTORS */
+        // Ruleset decomposition
         ruleset(){}
 
-        ruleset( unsigned int x ){ loadRules(x); }
+        // Initialize ruleset from a given integer,
+        // range and number of states (default range 1 and 2 states)
+        ruleset( int x, int R = 1, int S = 2 ){
+
+            loadRules(x);
+            r = R;
+            s = S;
+        }
 
         // Load appropriate states into array for a given int
-        void loadRules( unsigned int x ){
-            value = x;
-            for ( int i = 0; i < 8; i++ ){
-                n[i] = (( x >> i ) & 1); // Sets value from digits of base 2 representation of x
+        void loadRules( unsigned int x, int R = 1, int S = 2 ){
+
+            n = x;
+            r = R;
+            s = S;
+
+            for ( int i = 0; i < pow(s,2*r+1); ++i ){
+                P.push_back( (( x >> i ) & 1) ); // Sets value from digits of base 2 representation of x
             }
         }
 
         // Print this ruleset
         void print(){
-            cout << "Ruleset " << value << endl;
-            for ( int i = 0; i < 8; i++ ){ cout << i << "(" << n[i] << ")"; }
+            cout << "Ruleset " << n << endl;
+            for ( int i = 0; i < pow(s,2*r+1); ++i ){ cout << i << "(" << P[i] << ")"; }
             cout << endl;
         }
 
         // return value of state for given integer
-        unsigned int applyRule( unsigned int x ){ return n[x]; }
+        int applyRule( int x ){ return P[x]; }
 };
 
 // Class for a permutation of states (3 wide, 2 states)
@@ -85,4 +109,4 @@ class permutation{
 
 
 
-#endif // CLASSES_H_INCLUDED
+#endif // RULESET_H_INCLUDED

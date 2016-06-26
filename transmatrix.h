@@ -8,6 +8,9 @@
 #include <Dense>
 #include <Eigenvalues>
 
+// STD Containers
+#include <vector>
+
 // Name-spaces
 using namespace Eigen;
 using namespace std;

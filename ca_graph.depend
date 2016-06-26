@@ -1,9 +1,9 @@
 # depslib dependency file v1.0
-1466954641 source:/home/jordan/Projects/ca_graph/main.cpp
+1466979748 source:/home/jordan/Projects/ca_graph/main.cpp
 	<iostream>
 	<algorithm>
 	"transmatrix.h"
-	"classes.h"
+	"ruleset.h"
 
 1466699610 /home/jordan/Projects/ca_graph/classes.h
 	<iostream>
@@ -710,11 +710,12 @@
 1455629175 /home/jordan/Projects/ca_graph/Eigen/Array
 	"Core"
 
-1466955544 /home/jordan/Projects/ca_graph/transmatrix.h
+1466979629 /home/jordan/Projects/ca_graph/transmatrix.h
 	"node.h"
 	<Core>
 	<Dense>
 	<Eigenvalues>
+	<vector>
 
 1466957826 source:/home/jordan/Projects/ca_graph/transmatrix.cpp
 	"transmatrix.h"
@@ -723,12 +724,17 @@
 	<mkl.h>
 	<mkl_lapacke.h>
 
-1466975940 /home/jordan/Projects/ca_graph/node.h
+1466978619 /home/jordan/Projects/ca_graph/node.h
 	<iostream>
 	<fstream>
-	<vector>
 	<list>
 
-1466966419 source:/home/jordan/Projects/ca_graph/node.cpp
+1466978537 source:/home/jordan/Projects/ca_graph/node.cpp
 	"node.h"
+
+1466981338 /home/jordan/Projects/ca_graph/ruleset.h
+	<iostream>
+	<fstream>
+	<math.h>
+	<vector>
 

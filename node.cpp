@@ -20,6 +20,11 @@ void nodeChild::markVisited(){
     pntr->visited = true;
 }
 
+void nodeChild::unMarkVisited(){
+
+    pntr->visited = false;
+}
+
 /* ===== NODE FUNCTION DEFINTIONS ===== */
 // Default constructor
 node::node(){}
@@ -57,7 +62,7 @@ void cycleList::addNode( node* newNode ){
     nodeList.push_back( nodeChild( newNode ) );
 }
 
-// Add cycles from specific node to cycle list
+// Algorithm for finding the closed cycles of a graph from a given node
 void cycleList::cyclesFromNode( childIt start ){
 
     // Mark start node as visited locally and on list
@@ -112,8 +117,12 @@ void cycleList::cyclesFromNode( childIt start ){
                 }
         }
     }
+    // Stop the search if the stack size has not changed
+    // But avoid deleting the stack completely
     while( currentStackIt->size() != stackSize && currentStackIt->size() > 0 );
 
+    start->unMarkVisited(); // Mark this node as globally unvisited
+    stackList.pop_back();   // Remove the unused copy of the stack
 }
 
 // Remove any nodes not inside cycle from the front of a path
@@ -148,18 +157,23 @@ void cycleList::re_orderCycles(){
 
         minIt = it->begin();    // First place min at start of cycle
 
+        // Move the pointer to minimum value
         for ( stckIt jt = it->begin(); jt != it->end(); ++jt ){
             if ( (*jt)->value < (*minIt)->value ) minIt = jt;
         }
 
+        // If the cycle already starts at the lowest value then continue
         if ( minIt == it->begin() ) continue;
 
+        // Otherwise remove the last (repeated) node and move
+        // nodes from front to back until the minimum
         it->pop_back();
 
         for ( stckIt jt = it->begin(); jt != minIt; ++jt ){
             it->splice( it->end(), *it, jt );
         }
 
+        // Copy the first node to the back to show repetition
         it->push_back( *(it->begin()) );
     }
 }
@@ -212,3 +226,23 @@ int printPathsToFile( node nodeList[], int listSize, ofstream& aFile ){
 
     return newGraph.stackList.size();
 }
+    /*
+    // Print the cycles and their state representation
+    aFile << "Cycles: "<< endl;
+    for ( listIt = paths.begin(); listIt != paths.end(); ++listIt ){
+        for ( nodeIt = listIt->begin(); nodeIt != listIt->end(); ++nodeIt ){
+            if ( next(nodeIt) == listIt->end() ){ aFile << (*nodeIt)->value; }
+            else{ aFile << (*nodeIt)->value << "->"; }
+        }
+        aFile << endl;
+
+        list<node*>::reverse_iterator disIt;
+        for ( disIt = listIt->rbegin(); disIt != listIt->rend(); ++disIt ){
+            for ( int i = 2; i > -1; --i ){
+                if ( ( (*disIt)->value >> i ) % 2 == 0 ){ aFile << "\u2591"; }
+                else{ aFile << "\u2588"; }
+            }
+            aFile << endl;
+        }
+    }*/
+

@@ -1,12 +1,16 @@
 
+/* STD LIBRARIES */
 #include <iostream>
 #include <algorithm>
 
+/* DEPENDENCIES */
 #include "transmatrix.h"    // Transmission matrix class
-#include "classes.h"        // Ruleset and permutation class
+#include "ruleset.h" // Ruleset and permutation class
 
+/* NAMESPACES */
 using namespace std;
 
+/* FUNCTION DEFINITIONS */
 void printClass(){
 
     ruleset ruleA;
