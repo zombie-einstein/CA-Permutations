@@ -1,2 +1,4 @@
 Eigen
 data
+bin/*
+.gitignore
