@@ -11,4 +11,4 @@ parser.add_argument('rule',type=int,help="Rule number")
 args = parser.parse_args()
 
 a = ruleset.ruleset(args.rule,args.states)
-a.printRule()
+print a.toString()

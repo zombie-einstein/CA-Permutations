@@ -63,11 +63,12 @@ class ruleset:
                 self.transMat[i][j] += 1
             assert sum(self.transMat[i]) == self.states*self.states, "Transsion Matrix overfill"
 
-    def printRule(self):
+    def toString(self):
         
-        print "Ruleset: "+str(self.rule)+" for "+str(self.states)+" states"
-        print "Update rules:",self.upStates
-        print " -- Adjency Matrix --"
-        for i in xrange(len(self.adjMat)): print '{:02}'.format(i)+"->|"+",".join(['{:02}'.format(j) for j in self.adjMat[i]])+"|"
-        print "--- Unomralized Transition Matrix ---"
-        for i in xrange(len(self.transMat)): print '{:02}'.format(i)+"->|"+",".join(['{:02}'.format(j) for j in self.transMat[i]])+"|"
+        ret = "Ruleset: "+str(self.rule)+" for "+str(self.states)+" states\n"
+        ret += "Update rules: ["+",".join(str(i) for i in self.upStates)+"]\n"
+        ret += " --- Adjency Matrix ---\n"
+        for i in xrange(len(self.adjMat)): ret += '{:02}'.format(i)+"->|"+",".join(['{:02}'.format(j) for j in self.adjMat[i]])+"|\n"
+        ret += " --- Unomralized Transition Matrix ---\n"
+        for i in xrange(len(self.transMat)): ret+= '{:02}'.format(i)+"->|"+",".join(['{:02}'.format(j) for j in self.transMat[i]])+"|\n"
+        return ret
