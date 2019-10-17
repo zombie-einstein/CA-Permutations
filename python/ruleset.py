@@ -5,17 +5,7 @@
 
 from math import log
 
-def intToArr(n,base,l):
-    "Convert int n to array of digits in base for fixed digits l"
-    ret = []
-    for i in xrange(l):
-        ret.append(n%base)
-        n /= base
-    return ret
-
-def arrToInt(arr,base):
-    "Convert array of digits back to int using base"
-    return sum([arr[i]*pow(base,i) for i in range(0,len(arr))])
+from int_utils import *
 
 class ruleset:
     "1-D Cellular automata ruleset, represented as an integer in base # of states"
@@ -51,17 +41,17 @@ class ruleset:
             L = []; R = []
 
             for j in xrange(self.states):
-                L.append(arrToInt([j]+S[1:],self.states))
-                R.append(arrToInt(S[:2]+[j],self.states))
-            self.adjMat[i] += [ arrToInt([self.getUpState(a),S[1],self.getUpState(b)],self.states) for a in L for b in R ]
+                L.append(arrToInt([j]+S[:2],self.states))
+                R.append(arrToInt(S[1:]+[j],self.states))
+            self.adjMat[i] += [ arrToInt([self.getUpState(a),self.getUpState(i),self.getUpState(b)],self.states) for a in L for b in R ]
 
     def populateTransMatrix(self):
         "Populate transmission matrix from enries in adjency matrix"
 
         for i in xrange(self.perms):
-            for j in self.adjMat[i]:
-                self.transMat[i][j] += 1
-            assert sum(self.transMat[i]) == self.states*self.states, "Transsion Matrix overfill"
+            for j in self.adjMat[i]: self.transMat[j][i] += 1
+        for i in xrange(self.perms):
+            assert sum([ self.transMat[j][i] for j in xrange(self.perms)]) == self.states*self.states, "Transsion Matrix overfill"
 
     def toString(self):
         
